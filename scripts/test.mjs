@@ -17,7 +17,7 @@ async function request(auth, path = '', method = 'GET', body, extra = {}) {
 const url = auth => `${origin}/#${new URLSearchParams({ notebook: auth.id, key: auth.token })}`;
 try {
   if (!process.env.NOTES_TEST_ORIGIN) {
-    server = spawn(process.execPath, ['node_modules/wrangler/bin/wrangler.js', 'dev', '--ip', '127.0.0.1', '--port', '8897', '--persist-to', directory], { env: { ...process.env, CI: 'true', WRANGLER_SEND_METRICS: 'false' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    server = spawn(process.execPath, ['node_modules/wrangler/bin/wrangler.js', 'dev', '--var', 'PREVIEW_MODE:true', '--ip', '127.0.0.1', '--port', '8897', '--persist-to', directory], { env: { ...process.env, CI: 'true', WRANGLER_SEND_METRICS: 'false' }, stdio: ['ignore', 'pipe', 'pipe'] });
     await new Promise((resolve, reject) => {
       const timeout = setTimeout(() => reject(new Error('Local Worker did not start.')), 45000);
       const receive = chunk => { if (String(chunk).includes('Ready on')) { clearTimeout(timeout); resolve(); } };

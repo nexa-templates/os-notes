@@ -1,13 +1,13 @@
 {
-  "name": "nexa-notes",
+  "name": "@nexa-os-templates/notes",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "npm run build && wrangler dev",
-    "deploy": "npm run build && wrangler deploy",
-    "test": "npm run build && node scripts/test.mjs"
+    "deploy": "wrangler deploy",
+    "test": "node --test tests/access.test.mjs && npm run build && node scripts/test.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -30,5 +30,19 @@
     "esbuild": "0.25.12",
     "playwright-core": "1.58.2",
     "wrangler": "4.156.1"
+  },
+  "cloudflare": {
+    "label": "Notes",
+    "bindings": {
+      "ACCESS_ISSUER": {
+        "description": "Cloudflare Access team URL"
+      },
+      "ACCESS_AUD": {
+        "description": "Access application audience"
+      },
+      "APP_ORIGIN": {
+        "description": "Application HTTPS origin"
+      }
+    }
   }
 }

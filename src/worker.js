@@ -1,3 +1,4 @@
+import { accessUser, accessFailure, needsEditorAccess } from './access.js';
 import { DurableObject } from 'cloudflare:workers';
 
 const MAX_BODY = 110_000, MAX_NOTES = 100, MAX_TOTAL = 1_000_000;
@@ -126,6 +127,7 @@ async function route(request, env) {
 
 export default {
   async fetch(request, env) {
+    if (env.PREVIEW_MODE !== 'true' && true) { try { await accessUser(request, env); } catch (error) { return accessFailure(error); } }
     let response;
     try { response = await route(request, env); } catch { response = error('Unable to save right now. Your draft stays in this browser.', 503); }
     if (env.PREVIEW_MODE === 'true' && response.headers.get('content-type')?.includes('text/html')) response = new HTMLRewriter().on('#template-preview', { element(element) { element.removeAttribute('hidden'); } }).transform(response);
