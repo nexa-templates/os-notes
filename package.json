@@ -24,12 +24,16 @@
     "@tiptap/starter-kit": "3.32.2",
     "dompurify": "3.4.17",
     "lowlight": "3.3.0",
-    "marked": "18.1.2"
+    "marked": "18.1.2",
+    "solid-js": "1.9.18",
+    "@kobalte/core": "0.13.13"
   },
   "devDependencies": {
     "esbuild": "0.25.12",
     "playwright-core": "1.58.2",
-    "wrangler": "4.156.1"
+    "wrangler": "4.156.1",
+    "@babel/core": "7.29.7",
+    "babel-preset-solid": "1.9.16"
   },
   "cloudflare": {
     "label": "Notes",

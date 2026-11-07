@@ -156,6 +156,19 @@ try {
   await page.locator('#link-target').fill('https://example.com'); await page.getByRole('button', { name: 'Apply link', exact: true }).click();
   assert.equal(await content.locator('a').getAttribute('href'), 'https://example.com');
   assert.equal(await content.locator('a strong, strong a').textContent(), 'Bold from the toolbar', 'Adding a link preserves text formatting');
+  assert.equal(await page.locator('select').count(), 0, 'All selectors use custom controls');
+  await page.getByRole('combobox', { name: 'Text style', exact: true }).click();
+  await page.getByRole('option', { name: 'Heading 2', exact: true }).click();
+  assert.equal(await content.locator('h2').textContent(), 'Bold from the toolbar');
+  await page.getByRole('combobox', { name: 'Text style', exact: true }).click();
+  await page.getByRole('option', { name: 'Code block', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Code language', exact: true }).click();
+  await page.getByRole('option', { name: 'python', exact: true }).click();
+  assert.equal(await content.locator('pre code').getAttribute('class'), 'language-python');
+  await page.getByRole('combobox', { name: 'Text style', exact: true }).click();
+  await page.getByRole('option', { name: 'Text', exact: true }).click();
+  assert.equal(await content.locator('pre,h2').count(), 0);
+  
   await content.fill('');
   await content.evaluate(element => {
     const data = new DataTransfer(); data.setData('text/html', '<p><strong>Pasted safely</strong><img src=x onerror="window.pasteXSS=true"><script>window.pasteXSS=true</script><a href="javascript:alert(1)">Unsafe</a></p>');
@@ -200,7 +213,8 @@ try {
   await page.getByRole('button', { name: 'Share', exact: true }).click();
   await page.getByRole('button', { name: 'Create sharing link' }).click(); await page.locator('#link-result:not([hidden])').waitFor();
   const viewURL = await page.getByLabel('Sharing link', { exact: true }).inputValue();
-  await page.locator('#share-role').selectOption('edit');
+  await page.getByRole('combobox', { name: 'Access', exact: true }).click();
+  await page.getByRole('option', { name: 'Can edit', exact: true }).click();
   await page.getByRole('button', { name: 'Create sharing link' }).click(); await page.locator('#link-result:not([hidden])').waitFor();
   const editURL = await page.getByLabel('Sharing link', { exact: true }).inputValue();
   await page.keyboard.press('Escape'); assert.equal(await page.locator('dialog[open]').count(), 0);

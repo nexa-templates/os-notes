@@ -1,3 +1,4 @@
+import { mountSelect } from './select-mount.tsx';
 import { Editor, Node, InputRule, Extension } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from '@tiptap/markdown';
@@ -44,10 +45,12 @@ export function createRichEditor({ element, toolbar, onChange, onWiki, onLink, n
   let editor, identity, lastBody, suspended = false, suggestion = null, suggestionIndex = 0;
   const $ = selector => toolbar.querySelector(selector);
   toolbar.innerHTML = `<div class="format-row" role="toolbar" aria-label="Text formatting">
-    <select aria-label="Text style"><option value="paragraph">Text</option>${[1, 2, 3, 4, 5, 6].map(n => `<option value="h${n}">Heading ${n}</option>`).join('')}<option value="blockquote">Quote</option><option value="codeBlock">Code block</option></select>
+    <div data-text-style></div>
     <div class="format-group" data-group="marks"></div><div class="format-group" data-group="blocks"></div><div class="format-group" data-group="history"></div>
   </div><div class="table-tools" role="toolbar" aria-label="Table editing" hidden></div>
-  <label class="code-tools" hidden>Language <select aria-label="Code language"><option value="">Plain text</option>${['javascript', 'typescript', 'json', 'python', 'bash', 'html', 'css', 'sql'].map(lang => `<option>${lang}</option>`).join('')}</select></label>`;
+  <div class="code-tools" hidden>Language <div data-code-language></div></div>`;
+  const style = mountSelect($('[data-text-style]'), [{ value: 'paragraph', label: 'Text' }, ...[1, 2, 3, 4, 5, 6].map(n => ({ value: `h${n}`, label: `Heading ${n}` })), { value: 'blockquote', label: 'Quote' }, { value: 'codeBlock', label: 'Code block' }], 'Text style', 'paragraph', changeStyle);
+  const language = mountSelect($('[data-code-language]'), [{ value: '', label: 'Plain text' }, ...['javascript', 'typescript', 'json', 'python', 'bash', 'html', 'css', 'sql'].map(value => ({ value, label: value }))], 'Code language', '', value => editor.chain().focus().updateAttributes('codeBlock', { language: value || null }).run());
   const buttons = [];
   function button(group, label, text, action, active, enabled) {
     const button = document.createElement('button'); button.type = 'button'; button.textContent = text;
@@ -73,15 +76,15 @@ export function createRichEditor({ element, toolbar, onChange, onWiki, onLink, n
   button(history, 'Redo (Ctrl/⌘ Shift Z)', '↷', c => c.redo().run(), null, () => editor.can().redo());
   const table = $('.table-tools');
   for (const [label, command] of [['Add row', 'addRowAfter'], ['Add column', 'addColumnAfter'], ['Delete row', 'deleteRow'], ['Delete column', 'deleteColumn'], ['Delete table', 'deleteTable']]) button(table, label, label, c => c[command]().run());
-  $('select[aria-label="Text style"]').onchange = event => {
-    const value = event.target.value, chain = editor.chain().focus();
+  function changeStyle(value) {
+    const chain = editor.chain().focus();
     if (/^h[1-6]$/.test(value)) chain.setHeading({ level: Number(value[1]) }).run();
     else if (value === 'blockquote') chain.toggleBlockquote().run();
     else if (value === 'codeBlock') chain.toggleCodeBlock().run();
     else chain.clearNodes().setParagraph().run();
     sync();
   };
-  $('select[aria-label="Code language"]').onchange = event => editor.chain().focus().updateAttributes('codeBlock', { language: event.target.value || null }).run();
+
   function sync() {
     if (!editor) return;
     for (const { button, active, enabled } of buttons) {
@@ -89,9 +92,9 @@ export function createRichEditor({ element, toolbar, onChange, onWiki, onLink, n
       if (active) button.setAttribute('aria-pressed', String(editor.isActive(active)));
     }
     const heading = editor.getAttributes('heading').level;
-    $('select[aria-label="Text style"]').value = editor.isActive('codeBlock') ? 'codeBlock' : editor.isActive('heading') ? `h${heading}` : editor.isActive('blockquote') ? 'blockquote' : 'paragraph';
+    style.value = editor.isActive('codeBlock') ? 'codeBlock' : editor.isActive('heading') ? `h${heading}` : editor.isActive('blockquote') ? 'blockquote' : 'paragraph';
     table.hidden = !editor.isActive('table'); $('.code-tools').hidden = !editor.isActive('codeBlock');
-    $('select[aria-label="Code language"]').value = editor.getAttributes('codeBlock').language || '';
+    language.value = editor.getAttributes('codeBlock').language || '';
   }
   const suggestions = document.createElement('div'); suggestions.className = 'note-suggestions'; suggestions.hidden = true;
   suggestions.setAttribute('role', 'listbox'); suggestions.setAttribute('aria-label', 'Link to note'); suggestions.id = 'note-suggestions';

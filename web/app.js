@@ -1,8 +1,10 @@
+import { mountSelect } from './select-mount.tsx';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { createRichEditor, sourceOnly, safeURL } from './rich-editor.js';
 
 const $ = selector => document.querySelector(selector);
+const shareRole = mountSelect($('#share-role'), [{ value: 'view', label: 'Can view' }, { value: 'edit', label: 'Can edit' }], 'Access', 'view', () => { $('#link-result').hidden = true; $('#share-status').textContent = ''; });
 const initial = [
   { title: 'Start here', body: 'A little space for the things worth keeping. Ideas, meeting notes, decisions, and everything your team learns along the way.\n\n## Less organizing. More thinking.\n\nKeep your notes in plain Markdown. Give each thought a home, then connect it to the next one. There’s no complicated setup to get in your way.\n\n- **Write naturally.** Headings, lists, links, and a little room to think.\n- **Connect your ideas.** Type `[[` and a note title to link your notes.\n- **Bring people in.** Share a view or edit link to your notebook.\n\n> A good notebook isn’t a perfect system. It’s a place you keep coming back to.\n\n## A few places to start\n\nCollect a spark in [[Project ideas]], take a breath with [[Weekly notes]], or put the things everyone should know in [[Team handbook]].\n\n---\n\nMake this space your own. Create a notebook, add your first note, and share it with someone.' },
   { title: 'Project ideas', body: 'A place for ideas before they become plans.\n\n## A better welcome\n\nWhat if every new teammate had one page with everything they needed for their first week? Start with the [[Team handbook]].\n\n## Small improvements\n\n- A shared list of customer questions\n- A Friday note with what we learned\n- A quieter, simpler way to keep everyone in the loop\n\n## Next up\n\nPick one idea during our [[Weekly notes]] check-in.' },
@@ -311,11 +313,11 @@ $('#import-file').onchange = () => run(async () => {
 $('#share').onclick = () => { $('#share-status').textContent = ''; $('#link-result').hidden = true; $('#owner-link').value = link(credentials); $('#share-dialog').showModal(); };
 $('#generate-link').onclick = async () => {
   $('#generate-link').disabled = true;
-  try { const data = await api('/sharing', 'POST', { role: $('#share-role').value }); $('#share-link').value = link({ id: credentials.id, token: data.token }); $('#link-result').hidden = false; $('#share-status').textContent = `New ${data.role === 'edit' ? 'edit' : 'view'} link ready.`; }
+  try { const data = await api('/sharing', 'POST', { role: shareRole.value }); $('#share-link').value = link({ id: credentials.id, token: data.token }); $('#link-result').hidden = false; $('#share-status').textContent = `New ${data.role === 'edit' ? 'edit' : 'view'} link ready.`; }
   catch (error) { $('#share-status').textContent = error.message; }
   finally { $('#generate-link').disabled = false; }
 };
-$('#share-role').onchange = () => { $('#link-result').hidden = true; $('#share-status').textContent = ''; };
+
 $('#copy-link').onclick = async () => {
   try { await navigator.clipboard.writeText($('#share-link').value); $('#share-status').textContent = 'Link copied.'; }
   catch { $('#share-link').select(); $('#share-status').textContent = 'Select and copy the link above.'; }
